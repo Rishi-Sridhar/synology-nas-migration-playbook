@@ -1,0 +1,16 @@
+services:
+  media-manager:
+    image: ghcr.io/example/media-manager:<PINNED_VERSION>
+    container_name: media-manager
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - <APPDATA_ROOT>/media-manager:/config
+      - <MEDIA_ROOT>/movies:/media/movies
+      - <DOWNLOAD_ROOT>/qbit/movies:/downloads/qbit/movies
+    healthcheck:
+      test: ["CMD", "<HEALTHCHECK_COMMAND>"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

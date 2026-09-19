@@ -21,10 +21,18 @@ This repository is a generalized playbook, not an export of a particular NAS. It
 Treat every destructive step as the last stage of an evidence pipeline:
 
 ```text
-discover -> classify -> copy -> verify -> rebind -> validate -> retire -> prove
+discover -> classify -> copy -> verify -> rebind -> validate -> quarantine -> soak -> retire -> prove
 ```
 
-Copying bytes is not enough. A migration is complete only when applications resolve the new paths, protected exceptions still work, rollback material is usable, and the final state can be independently checked.
+Copying bytes is not enough. A migration is complete only when applications resolve the new paths, protected exceptions still work, rollback material is usable, and the final state can be independently checked. Passing migration validation establishes readiness, not automatic deletion authorization:
+
+- **Quarantine**: Reversible isolation of legacy paths from active service configuration.
+- **Soak**: Observation period covering scheduled background activity while old data remains recoverable.
+- **Retire**: Permanent removal only after reference absence and explicit authorization gates pass.
+
+## Relationship to Storage Director toolkit
+
+This repository focuses on operational migration methodology, procedural playbooks, and safety gates. The companion repository `nas-storage-director-toolkit` provides an independent reference implementation for policy-driven storage allocation and state monitoring. This playbook does not require or depend on that toolkit.
 
 ## Start here
 

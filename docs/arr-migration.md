@@ -14,12 +14,21 @@ ARR applications store paths in several places: root folders, series or movie re
 1. Back up each application database privately and stop writers if taking a direct database snapshot.
 2. Inventory root folders, item paths, download-client categories, remote mappings, queues, and health messages.
 3. Define old-to-new path mappings and reject overlapping or ambiguous rules.
-4. Change root folders through the application when possible. Move or reassign items in small cohorts.
-5. Align container binds before testing imports.
-6. Test one download through grab, completion, import, rename, rescan, and playback.
-7. Query for stale path prefixes and require a count of zero, except documented rollback entries.
-8. Confirm permissions by creating and removing a disposable file as the container's effective UID/GID.
+4. Verify mount exposure: confirming that the directory exists on the host is not enough. Verify that:
+   - The intended container receives the path at the correct internal mount point.
+   - The application configuration references the internal path.
+   - The container's effective UID/GID has read, write, and traverse permissions.
+5. Change root folders through the application's native UI or REST API. Move or reassign items in small cohorts.
+6. Align container binds before testing imports.
+7. Test one download through grab, completion, import, rename, rescan, and playback.
+8. Query for stale path prefixes and require a count of zero, except documented rollback entries.
+9. Confirm permissions by creating and removing a disposable file as the container's effective UID/GID.
 
-## Avoid silent database surgery
+## SQLite WAL mode and database safety
 
-Direct SQLite changes can bypass invariants and should be a last resort. If required, stop the application, take a consistent backup, document every statement, constrain updates by exact old prefixes, check affected-row counts, run database integrity checks, and start with a rollback rehearsal.
+ARR applications use SQLite databases frequently configured in Write-Ahead Logging (WAL) mode (`-wal` and `-shm` companion files). Observe these safety boundaries:
+
+- **Avoid host-side inspection of live databases**: Do not run host-level `sqlite3`, Python scripts, or external backup queries against a live SQLite database while the application container is running. External concurrent access can lead to file locking conflicts, dirty reads, or schema corruption.
+- **Never perform direct live modifications**: Direct SQL updates bypass application caches, internal validation logic, and event queues.
+- **Prefer official APIs**: Use the application's documented REST API or UI for all path updates, library resynchronization, and queue management.
+- **Clean state for maintenance**: If direct database inspection or emergency repair is unavoidable, cleanly stop the container first. Ensure all WAL entries are checkpointed into the main database file, create an immutable backup, document every statement, and rehearse the rollback procedure before touching data.
